@@ -61,9 +61,9 @@ if (!file_exists($newPath))
 	imagecopyresampled($new, $original, 0, 0, 0, 0, $width, $a, $w, $h);
 
 	// add watermark if exists
-	if (file_exists('wattermark.png'))
+	if (file_exists('watermark.png'))
 	{
-		$mark = imagecreatefrompng('wattermark.png');
+		$mark = imagecreatefrompng('watermark.png');
 		imagecopymerge($new, $mark , 0, 0, 0, 0, imagesx($mark), imagesy($mark), 20);
 		imagesavealpha($new, true);
 	}
