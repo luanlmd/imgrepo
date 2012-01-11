@@ -21,6 +21,7 @@ if (!file_exists($path))
 		$left = ($image->getImageWidth() - $watermark->getImageWidth()) / 2;
 		$top = ($image->getImageHeight() - $watermark->getImageHeight()) / 2;
 		$image->compositeImage($watermark, $watermark->getImageCompose(), $left, $top);
+		$watermark->destroy();
 		
 		/*$watermark->resizeImage(100, 100, false, 1, true);
 		$image = $image->textureImage($watermark);*/
