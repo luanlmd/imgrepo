@@ -1,2 +1,2 @@
 RewriteEngine On
-RewriteRule ^(.*)\.jpg$ index.php [QSA,L]
+RewriteRule ^(.*)\.(jpg|png)$ index.php [QSA,L]

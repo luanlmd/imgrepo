@@ -2,10 +2,11 @@
 preg_match('/\/.*\/(.+)\?/', $_SERVER['REQUEST_URI'], $matches);
 $filename = $matches[1];
 
-$width = $_GET['w'];
-if (!$width || $width > 1000) { $width = 1000; }
+$width = isset($_GET['w'])? $_GET['w'] : 1000;
+if ($width > 1000) { $width = 1000; }
 
-$path =  "/tmp/imgrepo_{$filename}_{$width}";
+$qs = $_SERVER['QUERY_STRING'];
+$path =  "/tmp/imgrepo_{$filename}?{$qs}";
 
 if (!file_exists($path))
 {
@@ -28,9 +29,14 @@ if (!file_exists($path))
 	}
 	
 	$image->writeImage($path);
-	$image->destroy(); 
+}
+else
+{
+	$image = new Imagick($path);
 }
 
-header("Content-type: image/jpeg");
-readfile($path);
+
+header("Content-type: image/{$image->getImageFormat()}");
+echo $image->getImageBlob();
+$image->destroy();
 exit();
