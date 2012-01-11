@@ -1,77 +1,35 @@
 <?php
+preg_match('/\/.*\/(.+)\?/', $_SERVER['REQUEST_URI'], $matches);
+$filename = $matches[1];
 
-$file = $_SERVER['REQUEST_URI'];
-$file = explode('/', $file);
-$file = $file[count($file)-1];
+$width = $_GET['w'];
+if (!$width || $width > 1000) { $width = 1000; }
 
-list($file, $ext) = explode('.',$file);
+$path =  "/tmp/imgrepo_{$filename}_{$width}";
 
-$exploded = explode('_',$file);
-$count = count($exploded);
-
-$width = 1000;
-$q = false;
-if ($count == 1)
+if (!file_exists($path))
 {
-	$id = $exploded[0];
-}
-
-if ($count == 2)
-{
-	list($id, $width) = $exploded;
-}
-else if ($count == 3)
-{
-	list($id, $width, $q) = $exploded;
-}
-
-if ($width > 1000) $width = 1000;
-
-$path = "{$id}";
-
-if (!$width) { $newPath = $path; }
-else { $newPath =  "/tmp/imgrepo_{$id}_{$width}" . (($q)? "_q" : ""); }
-
-if (!file_exists($newPath))
-{
-	list($w, $h) = getimagesize($path);
-	$original = imagecreatefromjpeg($path);
-
-	if ($q)
-	{
-		$s = $w;
-		if ($w > $h)
-			$s = $h;
-
-		$offW = ($w - $s) / 2;
-		$offH = ($h - $s) / 2;
-
-		$new = imagecreatetruecolor($s, $s);
-		imagecopyresampled($new, $original, -$offW, -$offH, 0, 0, $w, $h, $w, $h);
-		imagejpeg($new, $newPath, 72);
-
-		list($w, $h) = getimagesize($newPath);
-		$original = imagecreatefromjpeg($newPath);
-	}
-
-	$a = $h * $width / $w;
-	$new = imagecreatetruecolor($width, $a);
-
-	// resize
-	imagecopyresampled($new, $original, 0, 0, 0, 0, $width, $a, $w, $h);
+	$image = new Imagick($filename);
+	$image->resizeImage($width, $image->getImageHeight(), false, 1, true);
 
 	// add watermark if exists
 	if (file_exists('watermark.png'))
 	{
-		$mark = imagecreatefrompng('watermark.png');
-		imagecopymerge($new, $mark , 0, 0, 0, 0, imagesx($mark), imagesy($mark), 20);
-		imagesavealpha($new, true);
+		$watermark = new Imagick('watermark.png');		
+		
+		$watermark->resizeImage($image->getImageWidth(), $image->getImageHeight(), false, 1, true);
+		$left = ($image->getImageWidth() - $watermark->getImageWidth()) / 2;
+		$top = ($image->getImageHeight() - $watermark->getImageHeight()) / 2;
+		$image->compositeImage($watermark, $watermark->getImageCompose(), $left, $top);
+		
+		/*$watermark->resizeImage(100, 100, false, 1, true);
+		$image = $image->textureImage($watermark);*/
 	}
-
-	imagejpeg($new, $newPath, 75);
-	imagedestroy($new);
+	
+	$image->writeImage($path);
+	$image->destroy(); 
 }
 
 header("Content-type: image/jpeg");
-readfile($newPath);
+readfile($path);
 exit();
