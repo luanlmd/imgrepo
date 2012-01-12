@@ -29,14 +29,14 @@ if (!file_exists($path))
 	}
 	
 	$image->writeImage($path);
-}
-else
-{
-	$image = new Imagick($path);
+	$image->destroy();
 }
 
+$size = getimagesize($path);
+header("Content-type: {$size['mime']}");
+header('Cache-Control: private, pre-check=0, post-check=0, max-age=1080');
+header('Expires: ' . gmstrftime("%a, %d %b %Y %H:%M:%S GMT", time() + 1080)); //60*3
+header('Last-Modified: ' . gmstrftime("%a, %d %b %Y %H:%M:%S GMT", time() - 20)); //60*60*3
 
-header("Content-type: image/{$image->getImageFormat()}");
-echo $image->getImageBlob();
-$image->destroy();
+readfile($path);
 exit();
